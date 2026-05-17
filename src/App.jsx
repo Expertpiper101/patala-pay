@@ -285,11 +285,11 @@ function HardwareView({ session, requireLogin, addOrder }) {
   );
 }
 
-function AdminView({ session, orders, setOrders, setView }) {
+function AdminView({ session, orders, setOrders, setView, setSession }) {
   const [type, setType] = useState("All");
   const [search, setSearch] = useState("");
   if (!session || session.role !== "admin") {
-    return <LoginView setView={setView} setSession={() => {}} />;
+    return <LoginView setView={setView} setSession={setSession} />;
   }
   const filtered = orders.filter((order) => (type === "All" || order.type === type) && `${order.id} ${order.customer} ${order.item}`.toLowerCase().includes(search.toLowerCase()));
   const markPaid = (id) => {
@@ -337,7 +337,7 @@ export default function App() {
       {view === "login" ? <LoginView setView={setView} setSession={setSession} /> : null}
       {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
       {view === "hardware" ? <HardwareView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
-      {view === "admin" ? <AdminView session={session} orders={orders} setOrders={setOrders} setView={setView} /> : null}
+      {view === "admin" ? <AdminView session={session} orders={orders} setOrders={setOrders} setView={setView} setSession={setSession} /> : null}
     </>
   );
 }
