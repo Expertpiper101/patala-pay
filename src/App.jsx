@@ -10,9 +10,9 @@ const demoUsers = [
 ];
 
 const plans = {
-  starter: { name: "Starter", monthly: 299, annual: 2990, machineLimit: 1 },
-  growth: { name: "Growth", monthly: 599, annual: 5990, machineLimit: 3 },
-  multi: { name: "Multi-Store", monthly: 999, annual: 9990, machineLimit: 10 },
+  starter: { name: "Starter", monthly: 299, annual: 2990, lifetime: 8990, machineLimit: 1 },
+  growth: { name: "Growth", monthly: 599, annual: 5990, lifetime: 17990, machineLimit: 3 },
+  multi: { name: "Multi-Store", monthly: 999, annual: 9990, lifetime: 29990, machineLimit: 10 },
 };
 
 const hardwareProducts = {
@@ -51,6 +51,29 @@ function createLicenseKey(plan, business, machines) {
   return `SPP-${plan.name.toUpperCase()}-${customerCode(business)}-${String(machines).padStart(4, "0")}-${serial}`;
 }
 
+function addMonths(date, months) {
+  const output = new Date(date);
+  output.setMonth(output.getMonth() + months);
+  return output;
+}
+
+function licenseExpiryFor(term, createdAt) {
+  if (term === "lifetime") return null;
+  return addMonths(new Date(createdAt), term === "annual" ? 12 : 1).toISOString();
+}
+
+function billingLabel(term) {
+  if (term === "annual") return "Yearly";
+  if (term === "lifetime") return "Lifetime";
+  return "Monthly";
+}
+
+function licenseState(order) {
+  if (order.paymentStatus !== "Paid") return "Unpaid";
+  if (!order.licenseExpiresAt) return "Active";
+  return new Date(order.licenseExpiresAt) >= new Date() ? "Active" : "Expired";
+}
+
 function copyText(value) {
   if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(value);
@@ -65,6 +88,56 @@ function copyText(value) {
   input.select();
   document.execCommand("copy");
   document.body.removeChild(input);
+}
+
+function OrderHistory({ session, orders }) {
+  const [copiedOrder, setCopiedOrder] = useState("");
+  if (!session) return null;
+
+  const userEmail = String(session.email || "").toLowerCase();
+  const licenseOrders = orders
+    .filter((order) => order.type === "License")
+    .filter((order) => String(order.userEmail || order.email || "").toLowerCase() === userEmail)
+    .map((order) => ({ ...order, billingTerm: order.billingTerm || (String(order.item).toLowerCase().includes("annual") ? "annual" : "monthly") }));
+
+  return (
+    <section className="orders-section customer-history">
+      <div className="section-title-row">
+        <div>
+          <p className="eyebrow">Order history</p>
+          <h2>Your licenses</h2>
+        </div>
+      </div>
+      {!licenseOrders.length ? (
+        <p className="empty-cart">No license orders for this account yet.</p>
+      ) : (
+        <div className="orders-table-wrap">
+          <table>
+            <thead>
+              <tr><th>Order</th><th>Date</th><th>Type</th><th>Payment</th><th>License</th><th>Expires</th><th>Key</th></tr>
+            </thead>
+            <tbody>
+              {licenseOrders.map((order) => {
+                const state = licenseState(order);
+                const canCopy = order.paymentStatus === "Paid" && order.licenseReleased && order.licenseKey;
+                return (
+                  <tr key={order.id}>
+                    <td>{order.id}</td>
+                    <td>{new Date(order.createdAt).toLocaleDateString("en-ZA")}</td>
+                    <td>{billingLabel(order.billingTerm)}</td>
+                    <td><span className="status-pill">{order.paymentStatus === "Paid" ? "Paid" : "Unpaid"}</span></td>
+                    <td><span className={`status-pill ${state === "Expired" ? "is-expired" : state === "Unpaid" ? "is-unpaid" : ""}`}>{state}</span></td>
+                    <td>{order.licenseExpiresAt ? new Date(order.licenseExpiresAt).toLocaleDateString("en-ZA") : "Lifetime"}</td>
+                    <td>{canCopy ? <div className="history-license-key"><code>{order.licenseKey}</code><button type="button" onClick={() => { copyText(order.licenseKey); setCopiedOrder(order.id); }}>{copiedOrder === order.id ? "Copied" : "Copy"}</button></div> : "Hidden until paid"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
 }
 
 function BrandNav({ view, setView, session, logout }) {
@@ -158,31 +231,35 @@ function LoginView({ setView, setSession }) {
   );
 }
 
-function LicenseView({ session, requireLogin, addOrder }) {
+function LicenseView({ session, requireLogin, addOrder, orders }) {
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [term, setTerm] = useState("monthly");
   const [form, setForm] = useState({ businessName: "Demo Retail Store", contactName: "Store Owner", email: "owner@example.com", phone: "+27 82 000 0000", machines: 1, paymentMethod: "payfast", notes: "" });
   const plan = plans[selectedPlan];
   const machines = Math.max(1, Number(form.machines || 1));
   const extraMachines = Math.max(0, machines - plan.machineLimit);
-  const subtotal = plan[term] + extraMachines * (term === "annual" ? 1490 : 149);
+  const subtotal = plan[term] + extraMachines * (term === "lifetime" ? 4490 : term === "annual" ? 1490 : 149);
   const vat = subtotal * 0.15;
   const total = subtotal + vat;
 
   const submit = (event) => {
     event.preventDefault();
     if (!requireLogin()) return;
+    const createdAt = new Date().toISOString();
     const order = {
       id: `SPP-${Date.now()}`,
       type: "License",
+      userEmail: session.email,
       customer: form.businessName,
-      item: `${plan.name} ${term}`,
+      item: `${plan.name} ${billingLabel(term)}`,
+      billingTerm: term,
       total,
       status: form.paymentMethod === "eft" ? "Invoice" : "Payment link",
       paymentStatus: "Pending",
       licenseKey: createLicenseKey(plan, form.businessName, machines),
       licenseReleased: false,
-      createdAt: new Date().toISOString(),
+      licenseExpiresAt: licenseExpiryFor(term, createdAt),
+      createdAt,
     };
     addOrder(order);
     if (form.paymentMethod === "payfast") {
@@ -201,13 +278,13 @@ function LicenseView({ session, requireLogin, addOrder }) {
             <p className="lede">Choose a plan, capture the business details, and prepare the subscription order for payment processing.</p>
           </div>
           <div className="billing-toggle">
-            {["monthly", "annual"].map((value) => <button key={value} className={`term-button ${term === value ? "is-active" : ""}`} type="button" onClick={() => setTerm(value)}>{value === "monthly" ? "Monthly" : "Annual"}</button>)}
+            {["monthly", "annual", "lifetime"].map((value) => <button key={value} className={`term-button ${term === value ? "is-active" : ""}`} type="button" onClick={() => setTerm(value)}>{billingLabel(value)}</button>)}
           </div>
           <div className="plans-grid">
             {Object.entries(plans).map(([key, value]) => (
               <button key={key} className={`plan-card ${selectedPlan === key ? "is-selected" : ""}`} type="button" onClick={() => setSelectedPlan(key)}>
                 <span className="plan-name">{value.name}</span>
-                <span className="plan-price">{money(value[term])}{term === "annual" ? "/yr" : "/mo"}</span>
+                <span className="plan-price">{money(value[term])}{term === "lifetime" ? "" : term === "annual" ? "/yr" : "/mo"}</span>
                 <span className="plan-note">{value.machineLimit} till{value.machineLimit > 1 ? "s" : ""}, support included</span>
               </button>
             ))}
@@ -226,7 +303,7 @@ function LicenseView({ session, requireLogin, addOrder }) {
           <div><p className="eyebrow">Order summary</p><h2>Ready to issue</h2></div>
           <dl className="summary-list">
             <div><dt>Plan</dt><dd>{plan.name}</dd></div>
-            <div><dt>Billing</dt><dd>{term === "annual" ? "Annual" : "Monthly"}</dd></div>
+            <div><dt>Billing</dt><dd>{billingLabel(term)}</dd></div>
             <div><dt>Machines</dt><dd>{machines}</dd></div>
             <div><dt>Subtotal</dt><dd>{money(subtotal)}</dd></div>
             <div><dt>VAT estimate</dt><dd>{money(vat)}</dd></div>
@@ -236,6 +313,7 @@ function LicenseView({ session, requireLogin, addOrder }) {
           <p className="unlock-note">After payment is confirmed, the license key will be released for the desktop POS.</p>
         </aside>
       </section>
+      <OrderHistory session={session} orders={orders} />
     </main>
   );
 }
@@ -253,7 +331,7 @@ function HardwareView({ session, requireLogin, addOrder }) {
     if (!requireLogin()) return;
     if (!entries.length) return;
     const item = entries.map(([key, qty]) => `${qty} x ${hardwareProducts[key].name}`).join(", ");
-    const order = { id: `HW-${Date.now()}`, type: "Hardware", customer: form.businessName || "Unnamed Customer", item, total, status: "Quote", createdAt: new Date().toISOString() };
+    const order = { id: `HW-${Date.now()}`, type: "Hardware", userEmail: session.email, customer: form.businessName || "Unnamed Customer", item, total, status: "Quote", paymentStatus: "Pending", createdAt: new Date().toISOString() };
     addOrder(order);
     window.simplePosPayFast?.submitPayment(order);
   };
@@ -347,6 +425,7 @@ export default function App() {
     if (payment === "success" && returnedOrder) {
       const next = savedOrders.map((order) => order.id === orderId ? {
         ...order,
+        userEmail: order.userEmail || session?.email || "",
         status: "Paid",
         paymentStatus: "Paid",
         licenseReleased: order.type === "License" ? true : order.licenseReleased,
@@ -416,7 +495,7 @@ export default function App() {
         </section>
       ) : null}
       {view === "login" ? <LoginView setView={setView} setSession={setSession} /> : null}
-      {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
+      {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} orders={orders} /> : null}
       {view === "hardware" ? <HardwareView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
       {view === "admin" ? <AdminView session={session} orders={orders} setOrders={setOrders} setView={setView} setSession={setSession} /> : null}
     </>

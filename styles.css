@@ -289,7 +289,7 @@ h2 {
 
 .billing-toggle {
   display: inline-grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   margin-top: 28px;
   padding: 4px;
@@ -575,6 +575,49 @@ th {
   color: var(--accent-strong);
   font-size: 0.85rem;
   font-weight: 800;
+}
+
+.status-pill.is-expired {
+  background: #fbe9e4;
+  color: var(--danger);
+}
+
+.status-pill.is-unpaid {
+  background: #fff4db;
+  color: #7a5410;
+}
+
+.customer-history {
+  max-width: none;
+}
+
+.history-license-key {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.history-license-key code {
+  padding: 8px;
+  border: 1px dashed var(--accent);
+  border-radius: 6px;
+  background: #eef8f2;
+  color: var(--accent-strong);
+  font-size: 0.86rem;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.history-license-key button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 850;
+  padding: 0 10px;
 }
 
 .hardware-shell {

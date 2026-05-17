@@ -65,10 +65,12 @@ Before shipping to clients, set `SIMPLE_POS_LICENSE_URL` to the public website U
 
 - Plan selection for Starter, Growth, and Multi-Store subscriptions
 - Monthly and annual pricing
+- Lifetime license pricing
 - POS machine quantity handling
 - VAT estimate
 - Customer details capture
 - Purchase order summary
+- Customer license order history with paid, unpaid, active, and expired states
 - Draft recent-orders table in browser memory
 - Separate hardware store page for receipt printers, touchscreens, cash drawers, desktop PCs, and POS bundles
 - Admin dashboard page for viewing license orders, hardware orders, and sales totals
