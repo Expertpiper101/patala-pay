@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 const ORDER_KEY = "simplePosStoreOrders";
 const SESSION_KEY = "simplePosAuthSession";
@@ -316,6 +316,40 @@ export default function App() {
   const [view, setView] = useState("licenses");
   const [session, setSession] = useState(() => readJson(SESSION_KEY, null));
   const [orders, setOrders] = useState(() => readJson(ORDER_KEY, []));
+  const [paymentNotice, setPaymentNotice] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    const orderId = params.get("order");
+    if (!payment || !orderId) return;
+
+    const savedOrders = readJson(ORDER_KEY, []);
+    const orderExists = savedOrders.some((order) => order.id === orderId);
+    if (payment === "success" && orderExists) {
+      const next = savedOrders.map((order) => order.id === orderId ? {
+        ...order,
+        status: "Paid",
+        paymentStatus: "Paid",
+        licenseReleased: order.type === "License" ? true : order.licenseReleased,
+        paidAt: new Date().toISOString(),
+      } : order);
+      setOrders(next);
+      localStorage.setItem(ORDER_KEY, JSON.stringify(next));
+      setPaymentNotice(`Payment successful. Order ${orderId} is now marked Paid.`);
+      if (session?.role === "admin") setView("admin");
+    } else if (payment === "cancelled" && orderExists) {
+      const next = savedOrders.map((order) => order.id === orderId ? { ...order, status: "Payment cancelled", paymentStatus: "Cancelled" } : order);
+      setOrders(next);
+      localStorage.setItem(ORDER_KEY, JSON.stringify(next));
+      setPaymentNotice(`Payment was cancelled for order ${orderId}.`);
+    } else {
+      setPaymentNotice(`Payment returned for order ${orderId}, but that order was not found in this browser.`);
+    }
+
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }, []);
+
   const addOrder = (order) => {
     const next = [order, ...orders].slice(0, 100);
     setOrders(next);
@@ -334,6 +368,7 @@ export default function App() {
   return (
     <>
       {view !== "login" ? <BrandNav view={view} setView={setView} session={session} logout={logout} /> : null}
+      {paymentNotice ? <div className="payment-status global-payment-status">{paymentNotice}</div> : null}
       {view === "login" ? <LoginView setView={setView} setSession={setSession} /> : null}
       {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
       {view === "hardware" ? <HardwareView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
