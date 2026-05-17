@@ -156,8 +156,8 @@ function submitPayFastPayment(order) {
   const fields = {
     merchant_id: config.merchantId,
     merchant_key: config.merchantKey,
-    return_url: payFastReturnUrl(`payment-success.html?order=${encodeURIComponent(order.id)}`),
-    cancel_url: payFastReturnUrl(`payment-cancelled.html?order=${encodeURIComponent(order.id)}`),
+    return_url: payFastReturnUrl(`?payment=success&order=${encodeURIComponent(order.id)}`),
+    cancel_url: payFastReturnUrl(`?payment=cancelled&order=${encodeURIComponent(order.id)}`),
     notify_url: payFastReturnUrl("payfast-notify"),
     m_payment_id: order.id,
     amount: Number(order.total || 0).toFixed(2),

@@ -1,17 +1,30 @@
 # Patala Pay
 
-This is the first-pass standalone purchasing site for Patala Pay POS licenses, subscriptions, and hardware.
+This is the React/Vite purchasing site for Patala Pay POS licenses, subscriptions, and hardware.
 
 ## Open locally
 
-Open `index.html` in a browser, or serve the folder:
+Install and run the Vite app:
 
 ```powershell
 cd "C:\Users\Mr C\Desktop\Projects\simple-python-pos\license-website"
-python -m http.server 8080
+npm install
+npm run dev
 ```
 
-Then visit `http://localhost:8080`.
+Then visit the local Vite URL shown in the terminal, usually `http://127.0.0.1:8085`.
+
+## Build
+
+```powershell
+npm run build
+```
+
+Vercel should use:
+
+- Framework preset: `Vite`
+- Build command: `npm run build`
+- Output directory: `dist`
 
 ## Demo sign-in
 
@@ -27,7 +40,7 @@ Replace this demo authentication with a backend login service before taking real
 
 ## PayFast setup
 
-PayFast form-post integration is wired into the license and hardware checkout pages through `payfast-config.js` and `payfast.js`.
+PayFast form-post integration is wired into the React checkout through `payfast-config.js` and `payfast.js`.
 
 For testing, `payfast-config.js` defaults to PayFast sandbox credentials:
 
