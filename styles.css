@@ -476,6 +476,59 @@ textarea {
   border: 1px solid #c9e7d4;
 }
 
+.license-release-panel {
+  display: grid;
+  gap: 16px;
+  max-width: 1180px;
+  margin: 16px auto 0;
+  padding: 20px;
+  border: 1px solid #c9e7d4;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.license-release-panel p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.released-license-key {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.released-license-key code {
+  min-height: 48px;
+  padding: 14px;
+  border: 1px dashed var(--accent);
+  border-radius: 6px;
+  background: #eef8f2;
+  color: var(--accent-strong);
+  font-size: 1rem;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.released-license-key button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 850;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
+.copy-notice {
+  color: var(--accent-strong);
+  font-weight: 850;
+}
+
 .unlock-note {
   margin: 0;
   color: var(--muted);

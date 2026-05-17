@@ -51,6 +51,22 @@ function createLicenseKey(plan, business, machines) {
   return `SPP-${plan.name.toUpperCase()}-${customerCode(business)}-${String(machines).padStart(4, "0")}-${serial}`;
 }
 
+function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(value);
+    return;
+  }
+  const input = document.createElement("textarea");
+  input.value = value;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.left = "-9999px";
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand("copy");
+  document.body.removeChild(input);
+}
+
 function BrandNav({ view, setView, session, logout }) {
   return (
     <header className="topbar">
@@ -317,6 +333,8 @@ export default function App() {
   const [session, setSession] = useState(() => readJson(SESSION_KEY, null));
   const [orders, setOrders] = useState(() => readJson(ORDER_KEY, []));
   const [paymentNotice, setPaymentNotice] = useState("");
+  const [releasedLicense, setReleasedLicense] = useState(null);
+  const [copyNotice, setCopyNotice] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -325,8 +343,8 @@ export default function App() {
     if (!payment || !orderId) return;
 
     const savedOrders = readJson(ORDER_KEY, []);
-    const orderExists = savedOrders.some((order) => order.id === orderId);
-    if (payment === "success" && orderExists) {
+    const returnedOrder = savedOrders.find((order) => order.id === orderId);
+    if (payment === "success" && returnedOrder) {
       const next = savedOrders.map((order) => order.id === orderId ? {
         ...order,
         status: "Paid",
@@ -336,9 +354,15 @@ export default function App() {
       } : order);
       setOrders(next);
       localStorage.setItem(ORDER_KEY, JSON.stringify(next));
-      setPaymentNotice(`Payment successful. Order ${orderId} is now marked Paid.`);
+      const paidOrder = next.find((order) => order.id === orderId);
+      if (paidOrder?.type === "License" && paidOrder.licenseKey) {
+        setReleasedLicense(paidOrder);
+        setPaymentNotice(`Payment successful. Your license key is ready.`);
+      } else {
+        setPaymentNotice(`Payment successful. Order ${orderId} is now marked Paid.`);
+      }
       if (session?.role === "admin") setView("admin");
-    } else if (payment === "cancelled" && orderExists) {
+    } else if (payment === "cancelled" && returnedOrder) {
       const next = savedOrders.map((order) => order.id === orderId ? { ...order, status: "Payment cancelled", paymentStatus: "Cancelled" } : order);
       setOrders(next);
       localStorage.setItem(ORDER_KEY, JSON.stringify(next));
@@ -369,6 +393,28 @@ export default function App() {
     <>
       {view !== "login" ? <BrandNav view={view} setView={setView} session={session} logout={logout} /> : null}
       {paymentNotice ? <div className="payment-status global-payment-status">{paymentNotice}</div> : null}
+      {releasedLicense ? (
+        <section className="license-release-panel" aria-live="polite">
+          <div>
+            <p className="eyebrow">License ready</p>
+            <h2>{releasedLicense.item}</h2>
+            <p>Copy this key and paste it into the expired Patala Pay desktop app to unlock the POS.</p>
+          </div>
+          <div className="released-license-key">
+            <code>{releasedLicense.licenseKey}</code>
+            <button
+              type="button"
+              onClick={() => {
+                copyText(releasedLicense.licenseKey);
+                setCopyNotice("Copied");
+              }}
+            >
+              Copy Key
+            </button>
+          </div>
+          {copyNotice ? <span className="copy-notice">{copyNotice}</span> : null}
+        </section>
+      ) : null}
       {view === "login" ? <LoginView setView={setView} setSession={setSession} /> : null}
       {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
       {view === "hardware" ? <HardwareView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
