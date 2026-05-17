@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simple Python POS Admin</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-auth-required="admin">
+    <header class="topbar">
+      <a class="brand" href="./index.html" aria-label="Simple Python POS admin">
+        <img src="./assets/business-logo.png" alt="" />
+        <span>Simple Python POS</span>
+      </a>
+      <nav aria-label="Primary">
+        <a href="./index.html#plans">Licenses</a>
+        <a href="./hardware.html">Hardware</a>
+        <a href="./admin.html" aria-current="page">Admin</a>
+        <a href="./login.html" data-login-link>Login</a>
+        <span class="account-pill" data-auth-label></span>
+        <button class="logout-button" type="button" data-logout>Logout</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="admin-shell">
+        <div class="admin-heading">
+          <p class="eyebrow">Store admin</p>
+          <h1>Orders and sales dashboard.</h1>
+          <p class="lede">Review license purchases, hardware quotes, order status, and storefront sales totals.</p>
+        </div>
+
+        <section class="metric-grid" aria-label="Sales summary">
+          <article class="metric-card">
+            <span>Total sales</span>
+            <strong id="metricSales">R0.00</strong>
+          </article>
+          <article class="metric-card">
+            <span>Orders</span>
+            <strong id="metricOrders">0</strong>
+          </article>
+          <article class="metric-card">
+            <span>License orders</span>
+            <strong id="metricLicenses">0</strong>
+          </article>
+          <article class="metric-card">
+            <span>Hardware orders</span>
+            <strong id="metricHardware">0</strong>
+          </article>
+        </section>
+
+        <section class="admin-panel" aria-labelledby="orders-admin-title">
+          <div class="admin-toolbar">
+            <div>
+              <p class="eyebrow">Orders</p>
+              <h2 id="orders-admin-title">Store order list</h2>
+            </div>
+            <div class="admin-filters">
+              <label>
+                Type
+                <select id="typeFilter">
+                  <option value="All">All</option>
+                  <option value="License">License</option>
+                  <option value="Hardware">Hardware</option>
+                </select>
+              </label>
+              <label>
+                Search
+                <input id="adminSearch" placeholder="Customer or order number" />
+              </label>
+              <button type="button" id="seedOrders">Load Sample Orders</button>
+            </div>
+          </div>
+
+          <div class="orders-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Customer</th>
+                  <th>Item</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>License Key</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminOrdersBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./auth.js"></script>
+    <script src="./admin.js"></script>
+  </body>
+</html>

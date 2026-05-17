@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simple Python POS Hardware</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./index.html" aria-label="Simple Python POS licenses">
+        <img src="./assets/business-logo.png" alt="" />
+        <span>Simple Python POS</span>
+      </a>
+      <nav aria-label="Primary">
+        <a href="./index.html#plans">Licenses</a>
+        <a href="./hardware.html" aria-current="page">Hardware</a>
+        <a href="./admin.html">Admin</a>
+        <a href="#bundles">Bundles</a>
+        <a href="#hardware-order">Order</a>
+        <a href="./login.html" data-login-link>Login</a>
+        <span class="account-pill" data-auth-label></span>
+        <button class="logout-button" type="button" data-logout>Logout</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hardware-shell" id="hardware-order">
+        <div class="hardware-main">
+          <div class="panel-heading hardware-heading">
+            <p class="eyebrow">POS hardware store</p>
+            <h1>Build the full checkout counter.</h1>
+            <p class="lede">Add the printer, touchscreen, cash drawer, and desktop computer your client needs for a complete Simple Python POS setup.</p>
+          </div>
+
+          <section class="hardware-section" aria-labelledby="equipment-title">
+            <div class="section-title-row">
+              <div>
+                <p class="eyebrow">Equipment</p>
+                <h2 id="equipment-title">Core POS hardware</h2>
+              </div>
+            </div>
+            <div class="hardware-grid">
+              <article class="hardware-card" data-product-card="printer">
+                <div class="product-visual printer-visual" aria-hidden="true">
+                  <span></span>
+                </div>
+                <div class="hardware-copy">
+                  <h3>Thermal Receipt Printer</h3>
+                  <p>Fast counter receipt printer for sales slips, shift reports, and day-end printouts.</p>
+                  <ul>
+                    <li>USB or network ready</li>
+                    <li>80 mm receipt roll</li>
+                    <li>Cash drawer kick port</li>
+                  </ul>
+                </div>
+                <div class="hardware-buy">
+                  <strong>R1,899</strong>
+                  <button type="button" data-add-product="printer">Add</button>
+                </div>
+              </article>
+
+              <article class="hardware-card" data-product-card="touchscreen">
+                <div class="product-visual screen-visual" aria-hidden="true">
+                  <span></span>
+                </div>
+                <div class="hardware-copy">
+                  <h3>Touchscreen Monitor</h3>
+                  <p>Counter-friendly touchscreen display for fast product search and cashier workflows.</p>
+                  <ul>
+                    <li>15.6 inch touch panel</li>
+                    <li>Adjustable counter stand</li>
+                    <li>HDMI and USB touch</li>
+                  </ul>
+                </div>
+                <div class="hardware-buy">
+                  <strong>R3,499</strong>
+                  <button type="button" data-add-product="touchscreen">Add</button>
+                </div>
+              </article>
+
+              <article class="hardware-card" data-product-card="drawer">
+                <div class="product-visual drawer-visual" aria-hidden="true">
+                  <span></span>
+                </div>
+                <div class="hardware-copy">
+                  <h3>Cash Drawer</h3>
+                  <p>Metal drawer for cash, notes, and coins with printer-triggered opening support.</p>
+                  <ul>
+                    <li>RJ11 printer trigger</li>
+                    <li>Removable coin tray</li>
+                    <li>Manual key override</li>
+                  </ul>
+                </div>
+                <div class="hardware-buy">
+                  <strong>R1,299</strong>
+                  <button type="button" data-add-product="drawer">Add</button>
+                </div>
+              </article>
+
+              <article class="hardware-card" data-product-card="desktop">
+                <div class="product-visual desktop-visual" aria-hidden="true">
+                  <span></span>
+                </div>
+                <div class="hardware-copy">
+                  <h3>POS Desktop Computer</h3>
+                  <p>Windows desktop prepared for Simple Python POS, backups, receipt printing, and daily sales use.</p>
+                  <ul>
+                    <li>Windows-ready mini desktop</li>
+                    <li>SSD storage</li>
+                    <li>Configured for POS install</li>
+                  </ul>
+                </div>
+                <div class="hardware-buy">
+                  <strong>R5,999</strong>
+                  <button type="button" data-add-product="desktop">Add</button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="hardware-section" id="bundles" aria-labelledby="bundles-title">
+            <div class="section-title-row">
+              <div>
+                <p class="eyebrow">Bundles</p>
+                <h2 id="bundles-title">Ready-made POS kits</h2>
+              </div>
+            </div>
+            <div class="bundle-grid">
+              <button class="bundle-card" type="button" data-bundle="counter">
+                <span>Counter Kit</span>
+                <strong>R6,397</strong>
+                <small>Printer, touchscreen, cash drawer</small>
+              </button>
+              <button class="bundle-card" type="button" data-bundle="complete">
+                <span>Complete POS Kit</span>
+                <strong>R12,396</strong>
+                <small>Printer, touchscreen, cash drawer, desktop</small>
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <aside class="hardware-summary" aria-labelledby="hardware-summary-title">
+          <div>
+            <p class="eyebrow">Hardware order</p>
+            <h2 id="hardware-summary-title">Selected items</h2>
+          </div>
+          <div class="hardware-cart" id="hardwareCart">
+            <p class="empty-cart">No hardware selected yet.</p>
+          </div>
+          <dl class="summary-list">
+            <div>
+              <dt>Subtotal</dt>
+              <dd id="hardwareSubtotal">R0.00</dd>
+            </div>
+            <div>
+              <dt>VAT estimate</dt>
+              <dd id="hardwareVat">R0.00</dd>
+            </div>
+            <div class="total-row">
+              <dt>Total</dt>
+              <dd id="hardwareTotal">R0.00</dd>
+            </div>
+          </dl>
+          <form class="hardware-form" id="hardwareForm">
+            <label>
+              Business name
+              <input name="businessName" autocomplete="organization" required />
+            </label>
+            <label>
+              Delivery area
+              <input name="deliveryArea" autocomplete="address-level2" placeholder="City or suburb" />
+            </label>
+            <label>
+              Installation preference
+              <select name="installPreference">
+                <option value="delivery">Delivery only</option>
+                <option value="remote">Remote setup support</option>
+                <option value="onsite">On-site installation quote</option>
+              </select>
+            </label>
+            <button class="primary-action" type="submit">Prepare Hardware Quote</button>
+          </form>
+          <div class="payment-status" id="hardwareStatus">Hardware quote not prepared yet</div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./auth.js"></script>
+    <script src="./payfast-config.js"></script>
+    <script src="./payfast.js"></script>
+    <script src="./hardware.js"></script>
+  </body>
+</html>
