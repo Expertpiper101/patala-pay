@@ -161,7 +161,7 @@ function submitPayFastPayment(order) {
     notify_url: payFastReturnUrl("payfast-notify"),
     m_payment_id: order.id,
     amount: Number(order.total || 0).toFixed(2),
-    item_name: order.type === "License" ? `Simple Python POS ${order.item}` : `POS Hardware ${order.id}`,
+    item_name: order.type === "License" ? `Patala Pay ${order.item}` : `Patala Pay Hardware ${order.id}`,
     item_description: order.item,
     custom_str1: order.type,
     custom_str2: order.customer,

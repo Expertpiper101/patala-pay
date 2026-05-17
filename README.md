@@ -1,6 +1,6 @@
-# Simple Python POS License Website
+# Patala Pay
 
-This is the first-pass standalone purchasing site for POS licenses and subscriptions.
+This is the first-pass standalone purchasing site for Patala Pay POS licenses, subscriptions, and hardware.
 
 ## Open locally
 
