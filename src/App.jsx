@@ -42,6 +42,27 @@ function readJson(key, fallback) {
   }
 }
 
+function readStoredJson(storage, key, fallback) {
+  try {
+    return JSON.parse(storage.getItem(key) || JSON.stringify(fallback));
+  } catch {
+    return fallback;
+  }
+}
+
+function users() {
+  return [...demoUsers, ...readJson(USERS_KEY, [])];
+}
+
+function readSession() {
+  return readJson(SESSION_KEY, null) || readStoredJson(sessionStorage, SESSION_KEY, null);
+}
+
+function persistSession(user) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+}
+
 function customerCode(value) {
   return String(value || "CLIENT").toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 6).padEnd(4, "X");
 }
@@ -163,7 +184,6 @@ function LoginView({ setView, setSession }) {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", businessName: "", email: "admin@simplepos.local", password: "admin123" });
   const [error, setError] = useState("");
-  const users = () => [...demoUsers, ...readJson(USERS_KEY, [])];
 
   const submit = (event) => {
     event.preventDefault();
@@ -177,7 +197,7 @@ function LoginView({ setView, setSession }) {
       const user = { email, password: form.password, name: form.name, businessName: form.businessName, role: "user", verified: false };
       const registered = readJson(USERS_KEY, []);
       localStorage.setItem(USERS_KEY, JSON.stringify([...registered, user]));
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+      persistSession(user);
       setSession(user);
       setView("licenses");
       return;
@@ -187,7 +207,7 @@ function LoginView({ setView, setSession }) {
       setError("Invalid email or password.");
       return;
     }
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    persistSession(user);
     setSession(user);
     setView(user.role === "admin" ? "admin" : "licenses");
   };
@@ -231,7 +251,7 @@ function LoginView({ setView, setSession }) {
   );
 }
 
-function LicenseView({ session, requireLogin, addOrder, orders }) {
+function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicense }) {
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [term, setTerm] = useState("monthly");
   const [form, setForm] = useState({ businessName: "Demo Retail Store", contactName: "Store Owner", email: "owner@example.com", phone: "+27 82 000 0000", machines: 1, paymentMethod: "payfast", notes: "" });
@@ -309,8 +329,12 @@ function LicenseView({ session, requireLogin, addOrder, orders }) {
             <div><dt>VAT estimate</dt><dd>{money(vat)}</dd></div>
             <div className="total-row"><dt>Total due</dt><dd>{money(total)}</dd></div>
           </dl>
-          <div className="license-preview"><span>License key</span><strong>Locked until payment succeeds</strong></div>
-          <p className="unlock-note">After payment is confirmed, the license key will be released for the desktop POS.</p>
+          {!hasReleasedLicense ? (
+            <>
+              <div className="license-preview"><span>License key</span><strong>Locked until payment succeeds</strong></div>
+              <p className="unlock-note">After payment is confirmed, the license key will be released for the desktop POS.</p>
+            </>
+          ) : null}
         </aside>
       </section>
       <OrderHistory session={session} orders={orders} />
@@ -408,7 +432,7 @@ function AdminView({ session, orders, setOrders, setView, setSession }) {
 
 export default function App() {
   const [view, setView] = useState("licenses");
-  const [session, setSession] = useState(() => readJson(SESSION_KEY, null));
+  const [session, setSession] = useState(() => readSession());
   const [orders, setOrders] = useState(() => readJson(ORDER_KEY, []));
   const [paymentNotice, setPaymentNotice] = useState("");
   const [releasedLicense, setReleasedLicense] = useState(null);
@@ -422,6 +446,14 @@ export default function App() {
 
     const savedOrders = readJson(ORDER_KEY, []);
     const returnedOrder = savedOrders.find((order) => order.id === orderId);
+    if (!session && returnedOrder?.userEmail) {
+      const returningEmail = String(returnedOrder.userEmail).toLowerCase();
+      const returningUser = users().find((user) => String(user.email).toLowerCase() === returningEmail);
+      if (returningUser) {
+        persistSession(returningUser);
+        setSession(returningUser);
+      }
+    }
     if (payment === "success" && returnedOrder) {
       const next = savedOrders.map((order) => order.id === orderId ? {
         ...order,
@@ -464,6 +496,7 @@ export default function App() {
     return false;
   };
   const logout = () => {
+    localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(SESSION_KEY);
     setSession(null);
     setView("licenses");
@@ -495,7 +528,7 @@ export default function App() {
         </section>
       ) : null}
       {view === "login" ? <LoginView setView={setView} setSession={setSession} /> : null}
-      {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} orders={orders} /> : null}
+      {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} orders={orders} hasReleasedLicense={Boolean(releasedLicense)} /> : null}
       {view === "hardware" ? <HardwareView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
       {view === "admin" ? <AdminView session={session} orders={orders} setOrders={setOrders} setView={setView} setSession={setSession} /> : null}
     </>
