@@ -47,10 +47,11 @@ For testing, `payfast-config.js` defaults to PayFast sandbox credentials:
 - `merchantId`: `10000100`
 - `merchantKey`: `46f0cd694581a`
 - `sandbox`: `true`
+- `useSignature`: `false`
 
 Before real payment testing, update `siteBaseUrl` in `payfast-config.js` to the public hosted website URL. PayFast return, cancel, and notify URLs must be reachable on the internet; `localhost` and local files are not suitable for full payment confirmation.
 
-Before live payments, set your real PayFast merchant ID, merchant key, passphrase if configured, and change `sandbox` to `false`.
+Before live payments, set your real PayFast merchant ID, merchant key, passphrase if configured, set `useSignature` to `true` when using a passphrase, and change `sandbox` to `false`.
 
 License keys remain hidden until payment is confirmed. In this static demo, admin can manually mark an order as paid from the admin page. In production, release keys only after validating the PayFast ITN/notify callback on a backend server.
 

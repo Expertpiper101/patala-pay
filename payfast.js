@@ -196,7 +196,9 @@ function submitPayFastPayment(order) {
     custom_str1: order.type,
     custom_str2: order.customer,
   };
-  fields.signature = payFastSignature(fields);
+  if (config.passphrase || config.useSignature) {
+    fields.signature = payFastSignature(fields);
+  }
 
   const form = document.createElement("form");
   form.method = "post";
