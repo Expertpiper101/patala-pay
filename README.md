@@ -74,6 +74,7 @@ Before shipping to clients, set `SIMPLE_POS_LICENSE_URL` to the public website U
 - Draft recent-orders table in browser memory
 - Separate hardware store page for receipt printers, touchscreens, cash drawers, desktop PCs, and POS bundles
 - Admin dashboard page for viewing license orders, hardware orders, and sales totals
+- Admin pricing editor for Starter, Growth, and Multi-Store license packages
 - Demo authentication with separate sales-user and admin roles
 
 ## Next integration points

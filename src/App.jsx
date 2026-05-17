@@ -3,13 +3,14 @@ import { useEffect, useState } from "react";
 const ORDER_KEY = "simplePosStoreOrders";
 const SESSION_KEY = "simplePosAuthSession";
 const USERS_KEY = "simplePosRegisteredUsers";
+const PRICE_KEY = "patalaPayLicensePrices";
 
 const demoUsers = [
   { email: "admin@simplepos.local", password: "admin123", name: "Store Admin", role: "admin" },
   { email: "sales@simplepos.local", password: "sales123", name: "Sales User", role: "user" },
 ];
 
-const plans = {
+const defaultPlans = {
   starter: { name: "Starter", monthly: 299, annual: 2990, lifetime: 8990, machineLimit: 1 },
   growth: { name: "Growth", monthly: 599, annual: 5990, lifetime: 17990, machineLimit: 3 },
   multi: { name: "Multi-Store", monthly: 999, annual: 9990, lifetime: 29990, machineLimit: 10 },
@@ -40,6 +41,18 @@ function readJson(key, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function normalizePlans(savedPlans) {
+  return Object.fromEntries(Object.entries(defaultPlans).map(([key, plan]) => {
+    const saved = savedPlans?.[key] || {};
+    return [key, {
+      ...plan,
+      monthly: Number(saved.monthly || plan.monthly),
+      annual: Number(saved.annual || plan.annual),
+      lifetime: Number(saved.lifetime || plan.lifetime),
+    }];
+  }));
 }
 
 function readStoredJson(storage, key, fallback) {
@@ -251,7 +264,7 @@ function LoginView({ setView, setSession }) {
   );
 }
 
-function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicense }) {
+function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicense, plans }) {
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [term, setTerm] = useState("monthly");
   const [form, setForm] = useState({ businessName: "Demo Retail Store", contactName: "Store Owner", email: "owner@example.com", phone: "+27 82 000 0000", machines: 1, paymentMethod: "payfast", notes: "" });
@@ -403,7 +416,68 @@ function HardwareView({ session, requireLogin, addOrder }) {
   );
 }
 
-function AdminView({ session, orders, setOrders, setView, setSession }) {
+function AdminPricingPanel({ plans, setPlans }) {
+  const [draft, setDraft] = useState(plans);
+  const [saved, setSaved] = useState("");
+
+  const updatePrice = (planKey, term, value) => {
+    setSaved("");
+    setDraft((current) => ({
+      ...current,
+      [planKey]: {
+        ...current[planKey],
+        [term]: value,
+      },
+    }));
+  };
+
+  const savePrices = (event) => {
+    event.preventDefault();
+    const next = normalizePlans(draft);
+    setPlans(next);
+    setDraft(next);
+    localStorage.setItem(PRICE_KEY, JSON.stringify(next));
+    setSaved("Prices saved");
+  };
+
+  const resetPrices = () => {
+    const next = normalizePlans(defaultPlans);
+    setPlans(next);
+    setDraft(next);
+    localStorage.setItem(PRICE_KEY, JSON.stringify(next));
+    setSaved("Default prices restored");
+  };
+
+  return (
+    <section className="admin-panel pricing-panel">
+      <div className="admin-toolbar">
+        <div>
+          <p className="eyebrow">Pricing</p>
+          <h2>License package prices</h2>
+        </div>
+        <span className="save-note">{saved}</span>
+      </div>
+      <form className="pricing-grid" onSubmit={savePrices}>
+        {Object.entries(draft).map(([planKey, plan]) => (
+          <fieldset className="pricing-card" key={planKey}>
+            <legend>{plan.name}</legend>
+            {["monthly", "annual", "lifetime"].map((term) => (
+              <label key={term}>{billingLabel(term)}
+                <input type="number" min="0" step="1" value={plan[term]} onChange={(event) => updatePrice(planKey, term, event.target.value)} />
+              </label>
+            ))}
+          </fieldset>
+        ))}
+        <div className="pricing-actions">
+          <button className="table-action" type="submit">Save Prices</button>
+          <button className="secondary-action" type="button" onClick={resetPrices}>Reset Defaults</button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function AdminView({ session, orders, setOrders, setView, setSession, plans, setPlans }) {
   const [type, setType] = useState("All");
   const [search, setSearch] = useState("");
   if (!session || session.role !== "admin") {
@@ -421,6 +495,7 @@ function AdminView({ session, orders, setOrders, setView, setSession }) {
       <section className="admin-shell">
         <div className="admin-heading"><p className="eyebrow">Patala Pay admin</p><h1>Orders and sales dashboard.</h1><p className="lede">Review license purchases, hardware quotes, order status, and storefront sales totals.</p></div>
         <section className="metric-grid"><article className="metric-card"><span>Total sales</span><strong>{money(orders.reduce((sum, order) => sum + Number(order.total || 0), 0))}</strong></article><article className="metric-card"><span>Orders</span><strong>{orders.length}</strong></article><article className="metric-card"><span>License orders</span><strong>{orders.filter((order) => order.type === "License").length}</strong></article><article className="metric-card"><span>Hardware orders</span><strong>{orders.filter((order) => order.type === "Hardware").length}</strong></article></section>
+        <AdminPricingPanel plans={plans} setPlans={setPlans} />
         <section className="admin-panel">
           <div className="admin-toolbar"><div><p className="eyebrow">Orders</p><h2>Store order list</h2></div><div className="admin-filters"><label>Type<select value={type} onChange={(e) => setType(e.target.value)}><option>All</option><option>License</option><option>Hardware</option></select></label><label>Search<input value={search} onChange={(e) => setSearch(e.target.value)} /></label></div></div>
           <div className="orders-table-wrap"><table><thead><tr><th>Order</th><th>Date</th><th>Type</th><th>Customer</th><th>Item</th><th>Total</th><th>Status</th><th>License Key</th><th>Action</th></tr></thead><tbody>{filtered.map((order) => <tr key={order.id}><td>{order.id}</td><td>{new Date(order.createdAt).toLocaleString("en-ZA")}</td><td>{order.type}</td><td>{order.customer}</td><td>{order.item}</td><td>{money(order.total)}</td><td><span className="status-pill">{order.status}</span></td><td>{order.type === "License" && order.licenseReleased ? order.licenseKey : "Hidden"}</td><td>{order.type === "License" && !order.licenseReleased ? <button className="table-action" type="button" onClick={() => markPaid(order.id)}>Mark Paid</button> : ""}</td></tr>)}</tbody></table></div>
@@ -434,6 +509,7 @@ export default function App() {
   const [view, setView] = useState("licenses");
   const [session, setSession] = useState(() => readSession());
   const [orders, setOrders] = useState(() => readJson(ORDER_KEY, []));
+  const [plans, setPlans] = useState(() => normalizePlans(readJson(PRICE_KEY, defaultPlans)));
   const [paymentNotice, setPaymentNotice] = useState("");
   const [releasedLicense, setReleasedLicense] = useState(null);
   const [copyNotice, setCopyNotice] = useState("");
@@ -528,9 +604,9 @@ export default function App() {
         </section>
       ) : null}
       {view === "login" ? <LoginView setView={setView} setSession={setSession} /> : null}
-      {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} orders={orders} hasReleasedLicense={Boolean(releasedLicense)} /> : null}
+      {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} orders={orders} hasReleasedLicense={Boolean(releasedLicense)} plans={plans} /> : null}
       {view === "hardware" ? <HardwareView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
-      {view === "admin" ? <AdminView session={session} orders={orders} setOrders={setOrders} setView={setView} setSession={setSession} /> : null}
+      {view === "admin" ? <AdminView session={session} orders={orders} setOrders={setOrders} setView={setView} setSession={setSession} plans={plans} setPlans={setPlans} /> : null}
     </>
   );
 }
