@@ -20,6 +20,7 @@ const defaultPlans = {
 const foundersPlan = { name: "Founders Package", onceoff: 3000, machineLimit: 1 };
 
 const hardwareProducts = {
+  scanner: { name: "Barcode Scanner", price: 350 },
   printer: { name: "Thermal Receipt Printer", price: 1899 },
   touchscreen: { name: "Touchscreen Monitor", price: 3499 },
   drawer: { name: "Cash Drawer", price: 1299 },
@@ -400,13 +401,13 @@ function HardwareView({ session, requireLogin, addOrder }) {
     <main>
       <section className="hardware-shell">
         <div className="hardware-main">
-          <div className="panel-heading hardware-heading"><p className="eyebrow">POS hardware store</p><h1>Build the full checkout counter.</h1><p className="lede">Add the printer, touchscreen, cash drawer, and desktop computer your client needs for a complete Patala Pay POS setup.</p></div>
+          <div className="panel-heading hardware-heading"><p className="eyebrow">POS hardware store</p><h1>Build the full checkout counter.</h1><p className="lede">Add the barcode scanner, printer, touchscreen, cash drawer, and desktop computer your client needs for a complete Patala Pay POS setup.</p></div>
           <section className="hardware-section">
             <div className="section-title-row"><div><p className="eyebrow">Equipment</p><h2>Core POS hardware</h2></div></div>
             <div className="hardware-grid">
               {Object.entries(hardwareProducts).map(([key, product]) => (
                 <article className="hardware-card" key={key}>
-                  <div className={`product-visual ${key === "printer" ? "printer-visual" : key === "touchscreen" ? "screen-visual" : key === "drawer" ? "drawer-visual" : "desktop-visual"}`}><span /></div>
+                  <div className={`product-visual ${key === "scanner" ? "scanner-visual" : key === "printer" ? "printer-visual" : key === "touchscreen" ? "screen-visual" : key === "drawer" ? "drawer-visual" : "desktop-visual"}`}><span /></div>
                   <div className="hardware-copy"><h3>{product.name}</h3><p>Professional POS-ready hardware for Patala Pay installations.</p><ul><li>Configured for counter use</li><li>Supplier quote ready</li><li>Installation option available</li></ul></div>
                   <div className="hardware-buy"><strong>{money(product.price)}</strong><button type="button" onClick={() => add(key)}>Add</button></div>
                 </article>

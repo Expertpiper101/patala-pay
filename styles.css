@@ -1143,3 +1143,6 @@ h1 { font-family: Impact, 'Arial Narrow', Arial, sans-serif; font-weight: 900; f
 .founders-details { display: grid; gap: 8px; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
 .founders-checkout { justify-self: start; padding: 0 28px; margin-top: 12px; }
 .checkout-form { scroll-margin-top: 150px; }
+.scanner-visual::before { width: 92px; height: 56px; top: 36px; border: 9px solid #222; border-radius: 12px 18px 12px 8px; background: repeating-linear-gradient(90deg, #fff 0 3px, #111 3px 5px, #fff 5px 8px); transform: rotate(-18deg); }
+.scanner-visual::after { width: 30px; height: 65px; top: 82px; background: #222; border-radius: 0 0 9px 9px; transform: rotate(-18deg); }
+.scanner-visual span { width: 32px; height: 5px; top: 94px; left: calc(50% - 23px); background: var(--accent); transform: rotate(-18deg); z-index: 1; }
