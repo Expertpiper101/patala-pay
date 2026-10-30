@@ -1136,3 +1136,7 @@ h1 { font-family: Impact, 'Arial Narrow', Arial, sans-serif; font-weight: 900; f
 .bundle-card { background: #151515; }
 .bundle-card small { color: #fff; }
 @media (max-width: 720px) { main { padding-top: 30px; } .topbar { gap: 20px; } .brand img { width: 190px; } nav { gap: 18px; } }
+.founders-card { width: 100%; margin-top: 28px; padding: 24px; border: 2px solid var(--accent); background: #fff8f6; }
+.founders-card .eyebrow { margin: 0; }
+.founders-card .plan-name { font-size: 1.4rem; }
+.founders-card .plan-price small { font-size: 1rem; font-weight: 700; }

@@ -17,6 +17,8 @@ const defaultPlans = {
   multi: { name: "Multi-Store", monthly: 999, annual: 9990, lifetime: 29990, machineLimit: 10 },
 };
 
+const foundersPlan = { name: "Founders Package", onceoff: 3000, machineLimit: 1 };
+
 const hardwareProducts = {
   printer: { name: "Thermal Receipt Printer", price: 1899 },
   touchscreen: { name: "Touchscreen Monitor", price: 3499 },
@@ -93,11 +95,12 @@ function addMonths(date, months) {
 }
 
 function licenseExpiryFor(term, createdAt) {
-  if (term === "lifetime") return null;
+  if (term === "lifetime" || term === "onceoff") return null;
   return addMonths(new Date(createdAt), term === "annual" ? 12 : 1).toISOString();
 }
 
 function billingLabel(term) {
+  if (term === "onceoff") return "Once-off";
   if (term === "annual") return "Yearly";
   if (term === "lifetime") return "Lifetime";
   return "Monthly";
@@ -267,12 +270,14 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [term, setTerm] = useState("monthly");
   const [form, setForm] = useState({ businessName: "Demo Retail Store", contactName: "Store Owner", email: "owner@example.com", phone: "+27 82 000 0000", machines: 1, paymentMethod: "payfast", notes: "" });
-  const plan = plans[selectedPlan];
-  const machines = Math.max(1, Number(form.machines || 1));
+  const isFounders = selectedPlan === "founders";
+  const plan = isFounders ? foundersPlan : plans[selectedPlan];
+  const billingTerm = isFounders ? "onceoff" : term;
+  const machines = isFounders ? 1 : Math.max(1, Number(form.machines || 1));
   const extraMachines = Math.max(0, machines - plan.machineLimit);
-  const subtotal = plan[term] + extraMachines * (term === "lifetime" ? 4490 : term === "annual" ? 1490 : 149);
+  const subtotal = isFounders ? foundersPlan.onceoff / 1.15 : plan[term] + extraMachines * (term === "lifetime" ? 4490 : term === "annual" ? 1490 : 149);
   const vat = subtotal * 0.15;
-  const total = subtotal + vat;
+  const total = isFounders ? foundersPlan.onceoff : subtotal + vat;
 
   const submit = (event) => {
     event.preventDefault();
@@ -283,14 +288,16 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
       type: "License",
       userEmail: session.email,
       customer: form.businessName,
-      item: `${plan.name} ${billingLabel(term)}`,
-      billingTerm: term,
+      item: `${plan.name} ${billingLabel(billingTerm)}${isFounders ? " — 1 POS, desktop app, web admin and online store" : ""}`,
+      billingTerm,
+      machines,
+      ...(isFounders ? { includes: ["Desktop app", "Web admin", "Online store"] } : {}),
       total,
       status: form.paymentMethod === "eft" ? "Invoice" : "Payment link",
       paymentStatus: "Pending",
       licenseKey: createLicenseKey(plan, form.businessName, machines),
       licenseReleased: false,
-      licenseExpiresAt: licenseExpiryFor(term, createdAt),
+      licenseExpiresAt: licenseExpiryFor(billingTerm, createdAt),
       createdAt,
     };
     addOrder(order);
@@ -303,14 +310,21 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
     <main>
       <section className="purchase-shell">
         <div className="selector-panel">
-          <div className="trial-alert"><strong>Trial expired?</strong> Choose a subscription below, complete payment, and use the issued license key to unlock the desktop POS.</div>
+          <div className="trial-alert"><strong>Trial expired?</strong> Choose a package below, complete payment, and use the issued license key to unlock the desktop POS.</div>
           <div className="panel-heading">
             <p className="eyebrow">License checkout</p>
             <h1>Purchase a Patala Pay license key.</h1>
             <p className="lede">Choose a plan, capture the business details, and prepare the subscription order for payment processing.</p>
           </div>
+          <button type="button" className={`plan-card founders-card ${isFounders ? "is-selected" : ""}`} aria-pressed={isFounders} onClick={() => setSelectedPlan("founders")}>
+            <span className="eyebrow">Once-off special</span>
+            <span className="plan-name">Founders Package</span>
+            <span className="plan-price">{money(foundersPlan.onceoff)} <small>once-off</small></span>
+            <span className="plan-note">1 POS · Desktop app · Web admin · Online store</span>
+            <span className="plan-note">VAT included. No recurring package fee.</span>
+          </button>
           <div className="billing-toggle">
-            {["monthly", "annual", "lifetime"].map((value) => <button key={value} className={`term-button ${term === value ? "is-active" : ""}`} type="button" onClick={() => setTerm(value)}>{billingLabel(value)}</button>)}
+            {["monthly", "annual", "lifetime"].map((value) => <button key={value} className={`term-button ${term === value ? "is-active" : ""}`} type="button" onClick={() => { setTerm(value); if (isFounders) setSelectedPlan("starter"); }}>{billingLabel(value)}</button>)}
           </div>
           <div className="plans-grid">
             {Object.entries(plans).map(([key, value]) => (
@@ -325,7 +339,7 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
             {["businessName", "contactName", "email", "phone"].map((field) => (
               <label key={field}>{field.replace(/([A-Z])/g, " $1")}<input required={field !== "phone"} type={field === "email" ? "email" : "text"} value={form[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value })} /></label>
             ))}
-            <label>Number of POS machines<input type="number" min="1" max="50" value={form.machines} onChange={(e) => setForm({ ...form, machines: e.target.value })} /></label>
+            <label>Number of POS machines<input type="number" min="1" max={isFounders ? "1" : "50"} readOnly={isFounders} value={machines} onChange={(e) => setForm({ ...form, machines: e.target.value })} />{isFounders ? <span>Founders Package includes one POS.</span> : null}</label>
             <label>Preferred payment method<select value={form.paymentMethod} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}><option value="payfast">PayFast online payment</option><option value="eft">Manual EFT invoice</option><option value="card">Card payment link</option></select></label>
             <label className="wide-field">Notes<textarea rows="3" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
             <button className="primary-action" type="submit">{session ? "Create Purchase Order" : "Login To Purchase"}</button>
@@ -335,10 +349,11 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
           <div><p className="eyebrow">Order summary</p><h2>Ready to issue</h2></div>
           <dl className="summary-list">
             <div><dt>Plan</dt><dd>{plan.name}</dd></div>
-            <div><dt>Billing</dt><dd>{billingLabel(term)}</dd></div>
+            <div><dt>Billing</dt><dd>{billingLabel(billingTerm)}</dd></div>
+            {isFounders ? <div><dt>Includes</dt><dd>Desktop app, web admin &amp; online store</dd></div> : null}
             <div><dt>Machines</dt><dd>{machines}</dd></div>
             <div><dt>Subtotal</dt><dd>{money(subtotal)}</dd></div>
-            <div><dt>VAT estimate</dt><dd>{money(vat)}</dd></div>
+            <div><dt>{isFounders ? "VAT (included)" : "VAT estimate"}</dt><dd>{money(vat)}</dd></div>
             <div className="total-row"><dt>Total due</dt><dd>{money(total)}</dd></div>
           </dl>
           {!hasReleasedLicense ? (
