@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import brandLogo from "../assets/patala-pay-logo.svg";
 
 const ORDER_KEY = "simplePosStoreOrders";
@@ -267,6 +267,7 @@ function LoginView({ setView, setSession }) {
 }
 
 function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicense, plans }) {
+  const checkoutRef = useRef(null);
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [term, setTerm] = useState("monthly");
   const [form, setForm] = useState({ businessName: "Demo Retail Store", contactName: "Store Owner", email: "owner@example.com", phone: "+27 82 000 0000", machines: 1, paymentMethod: "payfast", notes: "" });
@@ -316,13 +317,20 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
             <h1>Purchase a Patala Pay license key.</h1>
             <p className="lede">Choose a plan, capture the business details, and prepare the subscription order for payment processing.</p>
           </div>
-          <button type="button" className={`plan-card founders-card ${isFounders ? "is-selected" : ""}`} aria-pressed={isFounders} onClick={() => setSelectedPlan("founders")}>
+          <article className={`plan-card founders-card ${isFounders ? "is-selected" : ""}`}>
+            <button type="button" className="founders-details" aria-pressed={isFounders} onClick={() => setSelectedPlan("founders")}>
             <span className="eyebrow">Once-off special</span>
             <span className="plan-name">Founders Package</span>
             <span className="plan-price">{money(foundersPlan.onceoff)} <small>once-off</small></span>
             <span className="plan-note">1 POS · Desktop app · Web admin · Online store</span>
             <span className="plan-note">VAT included. No recurring package fee.</span>
-          </button>
+            </button>
+            <button type="button" className="primary-action founders-checkout" onClick={() => {
+              setSelectedPlan("founders");
+              checkoutRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+              checkoutRef.current?.querySelector("input")?.focus({ preventScroll: true });
+            }}>Checkout</button>
+          </article>
           <div className="billing-toggle">
             {["monthly", "annual", "lifetime"].map((value) => <button key={value} className={`term-button ${term === value ? "is-active" : ""}`} type="button" onClick={() => { setTerm(value); if (isFounders) setSelectedPlan("starter"); }}>{billingLabel(value)}</button>)}
           </div>
@@ -336,7 +344,7 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
               </button>
             ))}
           </div>
-          <form className="checkout-form" onSubmit={submit}>
+          <form ref={checkoutRef} className="checkout-form" onSubmit={submit}>
             {["businessName", "contactName", "email", "phone"].map((field) => (
               <label key={field}>{field.replace(/([A-Z])/g, " $1")}<input required={field !== "phone"} type={field === "email" ? "email" : "text"} value={form[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value })} /></label>
             ))}

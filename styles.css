@@ -1140,3 +1140,6 @@ h1 { font-family: Impact, 'Arial Narrow', Arial, sans-serif; font-weight: 900; f
 .founders-card .eyebrow { margin: 0; }
 .founders-card .plan-name { font-size: 1.4rem; }
 .founders-card .plan-price small { font-size: 1rem; font-weight: 700; }
+.founders-details { display: grid; gap: 8px; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.founders-checkout { justify-self: start; padding: 0 28px; margin-top: 12px; }
+.checkout-form { scroll-margin-top: 150px; }
