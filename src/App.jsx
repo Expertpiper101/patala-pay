@@ -332,6 +332,7 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
                 <span className="plan-name">{value.name}</span>
                 <span className="plan-price">{money(value[term])}{term === "lifetime" ? "" : term === "annual" ? "/yr" : "/mo"}</span>
                 <span className="plan-note">{value.machineLimit} till{value.machineLimit > 1 ? "s" : ""}, support included</span>
+                <span className="plan-note">Desktop app · Web admin · Online store</span>
               </button>
             ))}
           </div>
