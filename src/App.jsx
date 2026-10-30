@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import brandLogo from "../assets/patala-pay-logo.svg";
 
 const ORDER_KEY = "simplePosStoreOrders";
 const SESSION_KEY = "simplePosAuthSession";
@@ -16,7 +17,10 @@ const defaultPlans = {
   multi: { name: "Multi-Store", monthly: 999, annual: 9990, lifetime: 29990, machineLimit: 10 },
 };
 
+const foundersPlan = { name: "Founders Package", onceoff: 3000, machineLimit: 1 };
+
 const hardwareProducts = {
+  scanner: { name: "Barcode Scanner", price: 350 },
   printer: { name: "Thermal Receipt Printer", price: 1899 },
   touchscreen: { name: "Touchscreen Monitor", price: 3499 },
   drawer: { name: "Cash Drawer", price: 1299 },
@@ -92,11 +96,12 @@ function addMonths(date, months) {
 }
 
 function licenseExpiryFor(term, createdAt) {
-  if (term === "lifetime") return null;
+  if (term === "lifetime" || term === "onceoff") return null;
   return addMonths(new Date(createdAt), term === "annual" ? 12 : 1).toISOString();
 }
 
 function billingLabel(term) {
+  if (term === "onceoff") return "Once-off";
   if (term === "annual") return "Yearly";
   if (term === "lifetime") return "Lifetime";
   return "Monthly";
@@ -178,13 +183,12 @@ function BrandNav({ view, setView, session, logout }) {
   return (
     <header className="topbar">
       <button className="brand brand-button" onClick={() => setView("licenses")} type="button">
-        <img src="/assets/business-logo.png" alt="" />
-        <span>Patala Pay</span>
+        <img src={brandLogo} alt="Patala Pay logo" />
       </button>
       <nav aria-label="Primary">
-        <button type="button" onClick={() => setView("licenses")}>Licenses</button>
-        <button type="button" onClick={() => setView("hardware")}>Hardware</button>
-        <button type="button" onClick={() => setView("admin")}>Admin</button>
+        <button type="button" aria-current={view === "licenses" ? "page" : undefined} onClick={() => setView("licenses")}>Licenses</button>
+        <button type="button" aria-current={view === "hardware" ? "page" : undefined} onClick={() => setView("hardware")}>Hardware</button>
+        <button type="button" aria-current={view === "admin" ? "page" : undefined} onClick={() => setView("admin")}>Admin</button>
         {!session ? <button type="button" onClick={() => setView("login")}>Login</button> : null}
         {session ? <span className="account-pill">{session.name} | {session.role}</span> : null}
         {session ? <button className="logout-button" type="button" onClick={logout}>Logout</button> : null}
@@ -229,8 +233,7 @@ function LoginView({ setView, setSession }) {
     <main className="login-shell">
       <section className="login-panel">
         <button className="brand login-brand brand-button" type="button" onClick={() => setView("licenses")}>
-          <img src="/assets/business-logo.png" alt="" />
-          <span>Patala Pay</span>
+          <img src={brandLogo} alt="Patala Pay logo" />
         </button>
         <div>
           <p className="eyebrow">Secure access</p>
@@ -265,15 +268,18 @@ function LoginView({ setView, setSession }) {
 }
 
 function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicense, plans }) {
+  const checkoutRef = useRef(null);
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [term, setTerm] = useState("monthly");
   const [form, setForm] = useState({ businessName: "Demo Retail Store", contactName: "Store Owner", email: "owner@example.com", phone: "+27 82 000 0000", machines: 1, paymentMethod: "payfast", notes: "" });
-  const plan = plans[selectedPlan];
-  const machines = Math.max(1, Number(form.machines || 1));
+  const isFounders = selectedPlan === "founders";
+  const plan = isFounders ? foundersPlan : plans[selectedPlan];
+  const billingTerm = isFounders ? "onceoff" : term;
+  const machines = isFounders ? 1 : Math.max(1, Number(form.machines || 1));
   const extraMachines = Math.max(0, machines - plan.machineLimit);
-  const subtotal = plan[term] + extraMachines * (term === "lifetime" ? 4490 : term === "annual" ? 1490 : 149);
+  const subtotal = isFounders ? foundersPlan.onceoff / 1.15 : plan[term] + extraMachines * (term === "lifetime" ? 4490 : term === "annual" ? 1490 : 149);
   const vat = subtotal * 0.15;
-  const total = subtotal + vat;
+  const total = isFounders ? foundersPlan.onceoff : subtotal + vat;
 
   const submit = (event) => {
     event.preventDefault();
@@ -284,14 +290,16 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
       type: "License",
       userEmail: session.email,
       customer: form.businessName,
-      item: `${plan.name} ${billingLabel(term)}`,
-      billingTerm: term,
+      item: `${plan.name} ${billingLabel(billingTerm)}${isFounders ? " — 1 POS, desktop app, web admin and online store" : ""}`,
+      billingTerm,
+      machines,
+      ...(isFounders ? { includes: ["Desktop app", "Web admin", "Online store"] } : {}),
       total,
       status: form.paymentMethod === "eft" ? "Invoice" : "Payment link",
       paymentStatus: "Pending",
       licenseKey: createLicenseKey(plan, form.businessName, machines),
       licenseReleased: false,
-      licenseExpiresAt: licenseExpiryFor(term, createdAt),
+      licenseExpiresAt: licenseExpiryFor(billingTerm, createdAt),
       createdAt,
     };
     addOrder(order);
@@ -304,14 +312,28 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
     <main>
       <section className="purchase-shell">
         <div className="selector-panel">
-          <div className="trial-alert"><strong>Trial expired?</strong> Choose a subscription below, complete payment, and use the issued license key to unlock the desktop POS.</div>
+          <div className="trial-alert"><strong>Trial expired?</strong> Choose a package below, complete payment, and use the issued license key to unlock the desktop POS.</div>
           <div className="panel-heading">
             <p className="eyebrow">License checkout</p>
             <h1>Purchase a Patala Pay license key.</h1>
             <p className="lede">Choose a plan, capture the business details, and prepare the subscription order for payment processing.</p>
           </div>
+          <article className={`plan-card founders-card ${isFounders ? "is-selected" : ""}`}>
+            <button type="button" className="founders-details" aria-pressed={isFounders} onClick={() => setSelectedPlan("founders")}>
+            <span className="eyebrow">Once-off special</span>
+            <span className="plan-name">Founders Package</span>
+            <span className="plan-price">{money(foundersPlan.onceoff)} <small>once-off</small></span>
+            <span className="plan-note">1 POS · Desktop app · Web admin · Online store</span>
+            <span className="plan-note">VAT included. No recurring package fee.</span>
+            </button>
+            <button type="button" className="primary-action founders-checkout" onClick={() => {
+              setSelectedPlan("founders");
+              checkoutRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+              checkoutRef.current?.querySelector("input")?.focus({ preventScroll: true });
+            }}>Checkout</button>
+          </article>
           <div className="billing-toggle">
-            {["monthly", "annual", "lifetime"].map((value) => <button key={value} className={`term-button ${term === value ? "is-active" : ""}`} type="button" onClick={() => setTerm(value)}>{billingLabel(value)}</button>)}
+            {["monthly", "annual", "lifetime"].map((value) => <button key={value} className={`term-button ${term === value ? "is-active" : ""}`} type="button" onClick={() => { setTerm(value); if (isFounders) setSelectedPlan("starter"); }}>{billingLabel(value)}</button>)}
           </div>
           <div className="plans-grid">
             {Object.entries(plans).map(([key, value]) => (
@@ -319,14 +341,15 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
                 <span className="plan-name">{value.name}</span>
                 <span className="plan-price">{money(value[term])}{term === "lifetime" ? "" : term === "annual" ? "/yr" : "/mo"}</span>
                 <span className="plan-note">{value.machineLimit} till{value.machineLimit > 1 ? "s" : ""}, support included</span>
+                <span className="plan-note">Desktop app · Web admin · Online store</span>
               </button>
             ))}
           </div>
-          <form className="checkout-form" onSubmit={submit}>
+          <form ref={checkoutRef} className="checkout-form" onSubmit={submit}>
             {["businessName", "contactName", "email", "phone"].map((field) => (
               <label key={field}>{field.replace(/([A-Z])/g, " $1")}<input required={field !== "phone"} type={field === "email" ? "email" : "text"} value={form[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value })} /></label>
             ))}
-            <label>Number of POS machines<input type="number" min="1" max="50" value={form.machines} onChange={(e) => setForm({ ...form, machines: e.target.value })} /></label>
+            <label>Number of POS machines<input type="number" min="1" max={isFounders ? "1" : "50"} readOnly={isFounders} value={machines} onChange={(e) => setForm({ ...form, machines: e.target.value })} />{isFounders ? <span>Founders Package includes one POS.</span> : null}</label>
             <label>Preferred payment method<select value={form.paymentMethod} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}><option value="payfast">PayFast online payment</option><option value="eft">Manual EFT invoice</option><option value="card">Card payment link</option></select></label>
             <label className="wide-field">Notes<textarea rows="3" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
             <button className="primary-action" type="submit">{session ? "Create Purchase Order" : "Login To Purchase"}</button>
@@ -336,10 +359,11 @@ function LicenseView({ session, requireLogin, addOrder, orders, hasReleasedLicen
           <div><p className="eyebrow">Order summary</p><h2>Ready to issue</h2></div>
           <dl className="summary-list">
             <div><dt>Plan</dt><dd>{plan.name}</dd></div>
-            <div><dt>Billing</dt><dd>{billingLabel(term)}</dd></div>
+            <div><dt>Billing</dt><dd>{billingLabel(billingTerm)}</dd></div>
+            {isFounders ? <div><dt>Includes</dt><dd>Desktop app, web admin &amp; online store</dd></div> : null}
             <div><dt>Machines</dt><dd>{machines}</dd></div>
             <div><dt>Subtotal</dt><dd>{money(subtotal)}</dd></div>
-            <div><dt>VAT estimate</dt><dd>{money(vat)}</dd></div>
+            <div><dt>{isFounders ? "VAT (included)" : "VAT estimate"}</dt><dd>{money(vat)}</dd></div>
             <div className="total-row"><dt>Total due</dt><dd>{money(total)}</dd></div>
           </dl>
           {!hasReleasedLicense ? (
@@ -377,13 +401,13 @@ function HardwareView({ session, requireLogin, addOrder }) {
     <main>
       <section className="hardware-shell">
         <div className="hardware-main">
-          <div className="panel-heading hardware-heading"><p className="eyebrow">POS hardware store</p><h1>Build the full checkout counter.</h1><p className="lede">Add the printer, touchscreen, cash drawer, and desktop computer your client needs for a complete Patala Pay POS setup.</p></div>
+          <div className="panel-heading hardware-heading"><p className="eyebrow">POS hardware store</p><h1>Build the full checkout counter.</h1><p className="lede">Add the barcode scanner, printer, touchscreen, cash drawer, and desktop computer your client needs for a complete Patala Pay POS setup.</p></div>
           <section className="hardware-section">
             <div className="section-title-row"><div><p className="eyebrow">Equipment</p><h2>Core POS hardware</h2></div></div>
             <div className="hardware-grid">
               {Object.entries(hardwareProducts).map(([key, product]) => (
                 <article className="hardware-card" key={key}>
-                  <div className={`product-visual ${key === "printer" ? "printer-visual" : key === "touchscreen" ? "screen-visual" : key === "drawer" ? "drawer-visual" : "desktop-visual"}`}><span /></div>
+                  <div className={`product-visual ${key === "scanner" ? "scanner-visual" : key === "printer" ? "printer-visual" : key === "touchscreen" ? "screen-visual" : key === "drawer" ? "drawer-visual" : "desktop-visual"}`}><span /></div>
                   <div className="hardware-copy"><h3>{product.name}</h3><p>Professional POS-ready hardware for Patala Pay installations.</p><ul><li>Configured for counter use</li><li>Supplier quote ready</li><li>Installation option available</li></ul></div>
                   <div className="hardware-buy"><strong>{money(product.price)}</strong><button type="button" onClick={() => add(key)}>Add</button></div>
                 </article>
