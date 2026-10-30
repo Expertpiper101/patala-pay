@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import brandLogo from "../assets/business-logo.png";
 
 const ORDER_KEY = "simplePosStoreOrders";
 const SESSION_KEY = "simplePosAuthSession";
@@ -178,13 +179,13 @@ function BrandNav({ view, setView, session, logout }) {
   return (
     <header className="topbar">
       <button className="brand brand-button" onClick={() => setView("licenses")} type="button">
-        <img src="/assets/business-logo.png" alt="" />
-        <span>Patala Pay</span>
+        <img src={brandLogo} alt="Patala Pay logo" />
+        <span className="brand-copy">Patala Pay<small>POS · Licenses · Hardware</small></span>
       </button>
       <nav aria-label="Primary">
-        <button type="button" onClick={() => setView("licenses")}>Licenses</button>
-        <button type="button" onClick={() => setView("hardware")}>Hardware</button>
-        <button type="button" onClick={() => setView("admin")}>Admin</button>
+        <button type="button" aria-current={view === "licenses" ? "page" : undefined} onClick={() => setView("licenses")}>Licenses</button>
+        <button type="button" aria-current={view === "hardware" ? "page" : undefined} onClick={() => setView("hardware")}>Hardware</button>
+        <button type="button" aria-current={view === "admin" ? "page" : undefined} onClick={() => setView("admin")}>Admin</button>
         {!session ? <button type="button" onClick={() => setView("login")}>Login</button> : null}
         {session ? <span className="account-pill">{session.name} | {session.role}</span> : null}
         {session ? <button className="logout-button" type="button" onClick={logout}>Logout</button> : null}
@@ -229,8 +230,8 @@ function LoginView({ setView, setSession }) {
     <main className="login-shell">
       <section className="login-panel">
         <button className="brand login-brand brand-button" type="button" onClick={() => setView("licenses")}>
-          <img src="/assets/business-logo.png" alt="" />
-          <span>Patala Pay</span>
+          <img src={brandLogo} alt="Patala Pay logo" />
+          <span className="brand-copy">Patala Pay<small>POS · Licenses · Hardware</small></span>
         </button>
         <div>
           <p className="eyebrow">Secure access</p>
