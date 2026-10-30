@@ -188,12 +188,63 @@ function BrandNav({ view, setView, session, logout }) {
       <nav aria-label="Primary">
         <button type="button" aria-current={view === "licenses" ? "page" : undefined} onClick={() => setView("licenses")}>Licenses</button>
         <button type="button" aria-current={view === "hardware" ? "page" : undefined} onClick={() => setView("hardware")}>Hardware</button>
+        <button type="button" aria-current={view === "enquiries" ? "page" : undefined} onClick={() => setView("enquiries")}>Enquiries</button>
         <button type="button" aria-current={view === "admin" ? "page" : undefined} onClick={() => setView("admin")}>Admin</button>
         {!session ? <button type="button" onClick={() => setView("login")}>Login</button> : null}
         {session ? <span className="account-pill">{session.name} | {session.role}</span> : null}
         {session ? <button className="logout-button" type="button" onClick={logout}>Logout</button> : null}
       </nav>
     </header>
+  );
+}
+
+function EnquiriesView() {
+  const [form, setForm] = useState({ name: "", email: "", phone: "", topic: "Packages and pricing", message: "", website: "" });
+  const [sending, setSending] = useState(false);
+  const [notice, setNotice] = useState(null);
+  const submit = async (event) => {
+    event.preventDefault();
+    if (sending) return;
+    setSending(true);
+    setNotice(null);
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}api/enquiry`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "We could not send your enquiry. Please try again or contact us directly.");
+      setNotice({ success: true, text: "Your enquiry has been sent. Thank you — we’ll be in touch." });
+      setForm({ name: "", email: "", phone: "", topic: "Packages and pricing", message: "", website: "" });
+    } catch (error) {
+      setNotice({ success: false, text: error.message === "Failed to fetch" ? "We could not connect. Please try again or contact us directly." : error.message });
+    } finally {
+      setSending(false);
+    }
+  };
+  return (
+    <main>
+      <section className="enquiries-shell">
+        <div>
+          <p className="eyebrow">Let’s talk</p>
+          <h1>Enquire about Patala Pay.</h1>
+          <p className="lede">Need help choosing a package, setting up your POS, or ordering hardware? Send us a message.</p>
+          <form className="checkout-form" onSubmit={submit}>
+            <label>Full name<input autoComplete="name" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+            <label>Email address<input autoComplete="email" type="email" required maxLength={254} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
+            <label>Cell number<input autoComplete="tel" type="tel" maxLength={40} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
+            <label>Enquiry about<select value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })}>{["Packages and pricing", "Founders Package", "Hardware", "Setup and support", "Other"].map((topic) => <option key={topic}>{topic}</option>)}</select></label>
+            <label className="wide-field">Message<textarea required minLength={10} maxLength={5000} rows={6} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></label>
+            <label className="enquiry-honeypot" aria-hidden="true">Website<input tabIndex={-1} autoComplete="off" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></label>
+            <p className="wide-field unlock-note">We’ll use your contact details to respond to this enquiry.</p>
+            <button className="primary-action" type="submit" disabled={sending}>{sending ? "Sending…" : "Send enquiry"}</button>
+            {notice ? <p className={`wide-field enquiry-notice ${notice.success ? "is-success" : "is-error"}`} role={notice.success ? "status" : "alert"}>{notice.text}</p> : null}
+          </form>
+        </div>
+        <aside className="contact-panel"><p className="eyebrow">Contact us directly</p><h2>Patala Pay enquiries</h2><p>Cell</p><a href="tel:+27727752083">072 775 2083</a><p>Email</p><a href="mailto:info@primon.co.za">info@primon.co.za</a></aside>
+      </section>
+    </main>
   );
 }
 
@@ -630,7 +681,9 @@ export default function App() {
       {view === "login" ? <LoginView setView={setView} setSession={setSession} /> : null}
       {view === "licenses" ? <LicenseView session={session} requireLogin={requireLogin} addOrder={addOrder} orders={orders} hasReleasedLicense={Boolean(releasedLicense)} plans={plans} /> : null}
       {view === "hardware" ? <HardwareView session={session} requireLogin={requireLogin} addOrder={addOrder} /> : null}
+      {view === "enquiries" ? <EnquiriesView /> : null}
       {view === "admin" ? <AdminView session={session} orders={orders} setOrders={setOrders} setView={setView} setSession={setSession} plans={plans} setPlans={setPlans} /> : null}
+      <footer className="contact-footer"><span>Patala Pay · Your local. Connected.</span><a href="tel:+27727752083">072 775 2083</a><a href="mailto:info@primon.co.za">info@primon.co.za</a><button type="button" onClick={() => setView("enquiries")}>Enquiries</button></footer>
     </>
   );
 }
