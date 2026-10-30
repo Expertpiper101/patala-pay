@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import brandLogo from "../assets/business-logo.png";
+import brandLogo from "../assets/patala-pay-logo.svg";
 
 const ORDER_KEY = "simplePosStoreOrders";
 const SESSION_KEY = "simplePosAuthSession";
@@ -180,7 +180,6 @@ function BrandNav({ view, setView, session, logout }) {
     <header className="topbar">
       <button className="brand brand-button" onClick={() => setView("licenses")} type="button">
         <img src={brandLogo} alt="Patala Pay logo" />
-        <span className="brand-copy">Patala Pay<small>POS · Licenses · Hardware</small></span>
       </button>
       <nav aria-label="Primary">
         <button type="button" aria-current={view === "licenses" ? "page" : undefined} onClick={() => setView("licenses")}>Licenses</button>
@@ -231,7 +230,6 @@ function LoginView({ setView, setSession }) {
       <section className="login-panel">
         <button className="brand login-brand brand-button" type="button" onClick={() => setView("licenses")}>
           <img src={brandLogo} alt="Patala Pay logo" />
-          <span className="brand-copy">Patala Pay<small>POS · Licenses · Hardware</small></span>
         </button>
         <div>
           <p className="eyebrow">Secure access</p>
