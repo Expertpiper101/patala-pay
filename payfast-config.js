@@ -4,5 +4,5 @@ window.simplePosPayFastConfig = {
   merchantKey: "46f0cd694581a",
   passphrase: "",
   useSignature: false,
-  siteBaseUrl: "https://patala-pay.vercel.app",
+  siteBaseUrl: `${window.location.origin}${/^\/patala-pay(?:\/|$)/.test(window.location.pathname) ? "/patala-pay" : ""}`,
 };
