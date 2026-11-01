@@ -4,10 +4,10 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/patala-pay/PointofSale", "destination": "/PointofSale/index.html" },
-    { "source": "/patala-pay/PointofSale/:path*", "destination": "/PointofSale/index.html" },
-    { "source": "/PointofSale", "destination": "/PointofSale/index.html" },
-    { "source": "/PointofSale/:path*", "destination": "/PointofSale/index.html" },
+    { "source": "/patala-pay/PointofSale", "destination": "/" },
+    { "source": "/patala-pay/PointofSale/:path*", "destination": "/" },
+    { "source": "/PointofSale", "destination": "/" },
+    { "source": "/PointofSale/:path*", "destination": "/" },
     { "source": "/patala-pay", "destination": "/" },
     { "source": "/patala-pay/:path*", "destination": "/:path*" }
   ],
