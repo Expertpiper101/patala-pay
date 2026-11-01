@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "../payfast-config.js";
 import "../payfast.js";
-import App from "./App.jsx";
+import App from "./Site.jsx";
 import "../styles.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(

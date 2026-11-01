@@ -1,7 +1,13 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/patala-pay/PointofSale", "destination": "/PointofSale/index.html" },
+    { "source": "/patala-pay/PointofSale/:path*", "destination": "/PointofSale/index.html" },
+    { "source": "/PointofSale", "destination": "/PointofSale/index.html" },
+    { "source": "/PointofSale/:path*", "destination": "/PointofSale/index.html" },
     { "source": "/patala-pay", "destination": "/" },
     { "source": "/patala-pay/:path*", "destination": "/:path*" }
   ],

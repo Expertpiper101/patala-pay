@@ -1154,6 +1154,7 @@ h1 { font-family: Impact, 'Arial Narrow', Arial, sans-serif; font-weight: 900; f
 .contact-footer span { margin-right: auto; }
 .contact-footer a { color: var(--ink); }
 .contact-footer button { border: 0; background: transparent; color: var(--accent-strong); cursor: pointer; font: inherit; font-weight: 700; padding: 0; }
+.pos-company-link{color:#151515;font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;border-bottom:1px solid #ee302b;padding-bottom:4px}
 .enquiry-honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .enquiry-notice { margin: 0; padding: 16px; line-height: 1.5; border: 1px solid var(--line); }
 .enquiry-notice.is-error { color: var(--danger); background: #fff0ed; }

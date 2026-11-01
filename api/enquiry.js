@@ -1,4 +1,4 @@
-const topics = new Set(["Packages and pricing", "Founders Package", "Hardware", "Setup and support", "Other"]);
+const topics = new Set(["Company and services", "Packages and pricing", "Founders Package", "Hardware", "Setup and support", "Payment innovation", "Other"]);
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");

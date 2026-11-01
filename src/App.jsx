@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import brandLogo from "../assets/patala-pay-logo.svg";
+import {COMPANY_PATH} from './routes.js';
 
 const ORDER_KEY = "simplePosStoreOrders";
 const SESSION_KEY = "simplePosAuthSession";
@@ -182,10 +183,11 @@ function OrderHistory({ session, orders }) {
 function BrandNav({ view, setView, session, logout }) {
   return (
     <header className="topbar">
-      <button className="brand brand-button" onClick={() => setView("licenses")} type="button">
+      <a className="brand" href={COMPANY_PATH} aria-label="Patala-Pay company home">
         <img src={brandLogo} alt="Patala Pay logo" />
-      </button>
+      </a>
       <nav aria-label="Primary">
+        <a href={COMPANY_PATH} className="pos-company-link">About Patala-Pay</a>
         <button type="button" aria-current={view === "licenses" ? "page" : undefined} onClick={() => setView("licenses")}>Licenses</button>
         <button type="button" aria-current={view === "hardware" ? "page" : undefined} onClick={() => setView("hardware")}>Hardware</button>
         <button type="button" aria-current={view === "enquiries" ? "page" : undefined} onClick={() => setView("enquiries")}>Enquiries</button>
@@ -198,8 +200,10 @@ function BrandNav({ view, setView, session, logout }) {
   );
 }
 
-function EnquiriesView() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", topic: "Packages and pricing", message: "", website: "" });
+export function EnquiriesView({embedded=false}={}) {
+  const Container=embedded?'section':'main';
+  const Heading=embedded?'h2':'h1';
+  const [form, setForm] = useState({ name: "", email: "", phone: "", topic: embedded?"Company and services":"Packages and pricing", message: "", website: "" });
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState(null);
   const submit = async (event) => {
@@ -216,7 +220,7 @@ function EnquiriesView() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "We could not send your enquiry. Please try again or contact us directly.");
       setNotice({ success: true, text: "Your enquiry has been sent. Thank you — we’ll be in touch." });
-      setForm({ name: "", email: "", phone: "", topic: "Packages and pricing", message: "", website: "" });
+      setForm({ name: "", email: "", phone: "", topic: embedded?"Company and services":"Packages and pricing", message: "", website: "" });
     } catch (error) {
       setNotice({ success: false, text: error.message === "Failed to fetch" ? "We could not connect. Please try again or contact us directly." : error.message });
     } finally {
@@ -224,17 +228,17 @@ function EnquiriesView() {
     }
   };
   return (
-    <main>
+    <Container>
       <section className="enquiries-shell">
         <div>
           <p className="eyebrow">Let’s talk</p>
-          <h1>Enquire about Patala Pay.</h1>
-          <p className="lede">Need help choosing a package, setting up your POS, or ordering hardware? Send us a message.</p>
+          <Heading>{embedded?'Let’s talk about your next step.':'Enquire about Patala Pay.'}</Heading>
+          <p className="lede">{embedded?'Tell us about your business, ask for a POS quote or speak to us about a payment idea.':'Need help choosing a package, setting up your POS, or ordering hardware? Send us a message.'}</p>
           <form className="checkout-form" onSubmit={submit}>
             <label>Full name<input autoComplete="name" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
             <label>Email address<input autoComplete="email" type="email" required maxLength={254} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
             <label>Cell number<input autoComplete="tel" type="tel" maxLength={40} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
-            <label>Enquiry about<select value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })}>{["Packages and pricing", "Founders Package", "Hardware", "Setup and support", "Other"].map((topic) => <option key={topic}>{topic}</option>)}</select></label>
+            <label>Enquiry about<select value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })}>{["Company and services", "Packages and pricing", "Founders Package", "Hardware", "Setup and support", "Payment innovation", "Other"].map((topic) => <option key={topic}>{topic}</option>)}</select></label>
             <label className="wide-field">Message<textarea required minLength={10} maxLength={5000} rows={6} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></label>
             <label className="enquiry-honeypot" aria-hidden="true">Website<input tabIndex={-1} autoComplete="off" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></label>
             <p className="wide-field unlock-note">We’ll use your contact details to respond to this enquiry.</p>
@@ -244,7 +248,7 @@ function EnquiriesView() {
         </div>
         <aside className="contact-panel"><p className="eyebrow">Contact us directly</p><h2>Patala Pay enquiries</h2><p>Cell</p><a href="tel:+27727752083">072 775 2083</a><p>Email</p><a href="mailto:info@primon.co.za">info@primon.co.za</a></aside>
       </section>
-    </main>
+    </Container>
   );
 }
 
@@ -580,8 +584,8 @@ function AdminView({ session, orders, setOrders, setView, setSession, plans, set
   );
 }
 
-export default function App() {
-  const [view, setView] = useState("licenses");
+export default function PointOfSale() {
+  const [view, setView] = useState(()=>{const view=new URLSearchParams(location.search).get('view');return ['licenses','hardware','enquiries','admin','login'].includes(view)?view:'licenses'});
   const [session, setSession] = useState(() => readSession());
   const [orders, setOrders] = useState(() => readJson(ORDER_KEY, []));
   const [plans, setPlans] = useState(() => normalizePlans(readJson(PRICE_KEY, defaultPlans)));

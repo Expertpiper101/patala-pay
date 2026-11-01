@@ -1,13 +1,24 @@
 # Patala Pay
 
-This is the React/Vite purchasing site for Patala Pay POS licenses, subscriptions, and hardware.
+This React/Vite site introduces Patala-Pay as a South African payment solutions startup and provides its POS licence, subscription and hardware pages.
+
+## Public pages
+
+- Company overview: https://www.primon.co.za/patala-pay
+- Point of sale, packages and hardware: https://www.primon.co.za/patala-pay/PointofSale
+- Direct hardware view: append `?view=hardware` to the PointofSale address.
+- Direct enquiry view: append `?view=enquiries` to the PointofSale address.
+
+The Primon site proxies both paths to this existing Vercel project. The root introduces the company, current business tools and future payment innovation ambitions. The original purchasing interface lives under PointofSale. Both use the existing enquiry endpoint and contact details.
+
+`npm run build` generates separate overview and PointofSale HTML metadata. Vercel rewrites preserve API and asset routing. Legacy payment-return query links still open the POS interface; new return links use the PointofSale path. The existing demo payment configuration remains unchanged apart from that return path.
 
 ## Open locally
 
 Install and run the Vite app:
 
 ```powershell
-cd "C:\Users\Mr C\Desktop\Projects\simple-python-pos\license-website"
+cd "C:\Users\Mr_PC\Desktop\Projects\patala-pay"
 npm install
 npm run dev
 ```

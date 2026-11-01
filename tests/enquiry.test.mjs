@@ -29,6 +29,8 @@ test("enquiry validation, delivery and failure handling", async () => {
       return { ok: true, json: async () => ({ id: "test-email-id" }) };
     };
     assert.equal((await request(valid)).code, 200);
+    assert.equal((await request({...valid,topic:'Company and services'})).code, 200);
+    assert.equal((await request({...valid,topic:'Payment innovation'})).code, 200);
     globalThis.fetch = async () => ({ ok: false });
     assert.equal((await request(valid)).code, 502);
     globalThis.fetch = async () => { throw new Error("Network unavailable"); };
